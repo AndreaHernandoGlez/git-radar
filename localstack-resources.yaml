@@ -10,6 +10,11 @@ Resources:
     Properties:
       BucketName: gitradar-datalake
 
+  GitRadarCodeFilesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: git-radar-codefiles
+
   TokenDatabase:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -38,7 +43,45 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
+  TokenizerLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: tokenizers.TokenizerLambdaHandler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: java11
+      Code:
+        S3Bucket: !Ref GitradarArtifactsBucket
+        S3Key: lambda/tokenizer.jar
+      Events:
+        S3Event:
+          Type: S3
+          Properties:
+            Bucket: !Ref GitRadarCodeFilesBucket
+            Events: s3:ObjectCreated:*
 
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaS3DynamoDBPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - dynamodb:PutItem
+                Resource: '*'
 
 Outputs:
   GitradarArtifactsBucketName:
@@ -47,8 +90,15 @@ Outputs:
   GitradarDatalakeBucketName:
     Value: !Ref GitradarDatalakeBucket
 
+  GitRadarCodeFilesBucketName:
+    Value: !Ref GitRadarCodeFilesBucket
+
   TokenDatabaseName:
     Value: !Ref TokenDatabase
 
   CodeMetricsDatabaseName:
     Value: !Ref CodeMetricsDatabase
+
+  TokenizerLambdaFunctionArn:
+    Value: !GetAtt TokenizerLambdaFunction.Arn
+
