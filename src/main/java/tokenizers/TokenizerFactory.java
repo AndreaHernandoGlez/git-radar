@@ -1,13 +1,10 @@
 package tokenizers;
 
-import java.io.File;
-
 public class TokenizerFactory {
-    public Tokenizer getTokenizer(File file) {
-        String fileName = file.getName();
-        if (fileName.endsWith(".java")) {
+    public Tokenizer getTokenizer(String language) {
+        if ("java".equalsIgnoreCase(language)) {
             return new JavaTokenizer();
-        } else if (fileName.endsWith(".py")) {
+        } else if ("python".equalsIgnoreCase(language)) {
             return new PythonTokenizer();
         } else {
             return new NullTokenizer();
