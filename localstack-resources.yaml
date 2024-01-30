@@ -82,6 +82,31 @@ Resources:
                   - s3:ListBucket
                   - dynamodb:PutItem
                 Resource: '*'
+  TokenQueryLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: TokenizerLambdaHandler.TokenQueryLambdaHandler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: java11
+      Code:
+        S3Bucket: !Ref GitradarArtifactsBucket
+        S3Key: lambda/token-query.jar
+
+  CodeMetricsCalculatorLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: code.metrics.CodeMetricsCalculatorLambdaHandler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: java11
+      Code:
+        S3Bucket: !Ref GitradarArtifactsBucket
+        S3Key: lambda/code-metrics-calculator.jar
+      Events:
+        S3Event:
+          Type: S3
+          Properties:
+            Bucket: !Ref GitRadarCodeFilesBucket
+            Events: s3:ObjectCreated:*
 
 Outputs:
   GitradarArtifactsBucketName:
@@ -101,4 +126,10 @@ Outputs:
 
   TokenizerLambdaFunctionArn:
     Value: !GetAtt TokenizerLambdaFunction.Arn
+
+  TokenQueryLambdaFunctionArn:
+    Value: !GetAtt TokenQueryLambdaFunction.Arn
+
+  CodeMetricsCalculatorLambdaFunctionArn:
+    Value: !GetAtt CodeMetricsCalculatorLambdaFunction.Arn
 
